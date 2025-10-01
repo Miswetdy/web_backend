@@ -6,21 +6,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/card.css' %}">
-    <link rel="stylesheet" href="{% static 'css/index.css' %}">
 </head>
 <body>
     <div class="person-card">
             <div class="card-header">
-                <div class="person-name">{{ person.name }}</div>
-                <button class="expand-btn">+</button>
+                <div class="person-name">{{ person.person_name }}</div>
+                 <form method="post" action="{% url 'addToPredictOrder' person.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="expand-btn">+</button>
+                 </form>
             </div>
 
             <hr>
 
             <div class="card-image">
-                <img src="http://localhost:9000/images/historyPerson{{ person.id }}.png" alt="{{ person.name }}">
+                <img src="http://localhost:9000/images/historyPerson{{ person.id }}.png" alt="{{ person.person_name }}">
             </div>
 
             <div class="card-years">

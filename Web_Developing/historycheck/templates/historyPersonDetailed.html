@@ -1,27 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Чтиво — {{ person.name }}{% endblock %}
+{% block title %}Чтиво — {{ data.person_name }}{% endblock %}
 
 {% block content %}
 <div class="person-detail">
-    <h1>{{ person.name }}</h1>
+    <h1>{{ data.person_name }}</h1>
 
     <div class="detail-content">
         <div class="detail-image">
-            <img src="http://localhost:9000/images/historyPerson{{ person.id }}.png" alt="{{ person.name }}">
+            <img src="http://localhost:9000/images/historyPerson{{ data.id }}.png" alt="{{ data.person_name }}">
         </div>
 
         <div class="detail-years">
             <h3>Годы правления</h3>
-            <p><strong>{{ person.year_from }} — {{ person.year_to }}</strong></p>
+            <p><strong>{{ data.year_from }} — {{ data.year_to }}</strong></p>
         </div>
 
     </div>
 
-    {% if person.desc %}
+    {% if data.description %}
     <div class="detail-desc">
         <h3>Историческая сводка:</h3>
-        <p>{{ person.desc }}</p>
+        <p>{{ data.description }}</p>
     </div>
     {% endif %}
 </div>

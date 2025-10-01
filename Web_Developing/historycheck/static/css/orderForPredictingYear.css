@@ -83,7 +83,7 @@
 }
 
 .card-footer {
-    margin-top: 70px;
+    margin-top: 40px;
 }
 
 .details-btn {
@@ -199,5 +199,5 @@ textarea {
 }
 
 .event-year h2 {
-    margin-bottom: 3px;  /* почти убираем стандартный отступ */
+    margin-bottom: 3px;
 }

@@ -55,7 +55,7 @@ ROOT_URLCONF = 'Web_Developing.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "historycheck/templates"],
+        'DIRS': [BASE_DIR / "historycheck/"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,18 +67,18 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Web_Developing.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydb',
+        'USER': 'root',
+        'PASSWORD': 'mydbpass',
+        'HOST': 'localhost',
+        'PORT': 5433,
     }
 }
+
+WSGI_APPLICATION = 'Web_Developing.wsgi.application'
 
 
 # Password validation

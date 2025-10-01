@@ -1,99 +1,229 @@
-from django.shortcuts import render
+from django.db import connection, transaction
+from django.shortcuts import render, get_object_or_404, redirect
 from datetime import date
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from historycheck.models import HistoryPerson, HistoryCheckOrder, HistoryCheckOrderItem
 
-persons = [
-        {
-            "id": 1,
-            "name": "Александр Ярославич Невский",
-            "year_from": 1252,
-            "year_to": 1263,
-            "desc": "Князь Новгородский, Великий князь Киевский и Владимирский из династии Рюриковичей, правивший в XIII веке. Прославился победами над шведами в Невской битве (1240) и над немецкими рыцарями в Ледовом побоище (1242), которые обезопасили северо-западные рубежи Руси. В условиях монгольского нашествия и западной угрозы выбрал курс на сотрудничество с Золотой Ордой для предотвращения новых разорительных войн и сохранения православия, что позволило русским землям собрать силы для будущего освобождения."
-        },
-        {
-            "id": 2,
-            "name": "Алаэддин-паша",
-            "year_from": 1320,
-            "year_to": 1331,
-            "desc": "Первый великий визирь Османской империи, назначенный султаном Орханом I. Будучи одним из главных архитекторов раннего османского государства, разработал и кодифицировал основные законы, создал фундамент централизованной административной системы и сформировал институт янычар, что заложило основы для будущего могущества империи."
-        },
-        {
-            "id": 3,
-            "name": "Михаил Федорович Романов",
-            "year_from": 1613,
-            "year_to": 1645,
-            "desc": "Первый царь из династии Романовых. Вступив на престол во время глубоких социальных потрясений, экономического и политического кризиса в Русском государстве, сумел их в целом преодолеть лишь к концу царствования."
-        },
-        {
-            "id": 4,
-            "name": "Карл Великий",
-            "year_from": 768,
-            "year_to": 814,
-            "desc": "Король франков с 768 года, король лангобардов с 774 года, император Запада с 800 года из династии Каролингов. Путем многочисленных завоеваний объединил под своей властью большую часть Западной Европы, создав обширную империю. Проводил политику культурного возрождения (Каролингское возрождение) и административных реформ, заложив основы феодального строя и европейской государственности. Его империя стала историческим предшественником будущих государств Франции, Германии и Италии."
-        },
-        {
-            "id": 5,
-            "name": "Вильгельм III Оранский",
-            "year_from": 1650,
-            "year_to": 1702,
-            "desc": "Правитель Нидерландов (штатгальтер с 1672 года) и король Англии, Шотландии и Ирландии (с 1689 года). Пришел к власти в ходе «Славной революции», свергнув своего тестя Якова II. Совместное правление с женой Марией II легитимизировало его претензии на престол. Закрепил переход к конституционной монархии, подписав «Билль о правах» (1689), который ограничил власть короны и усилил роль парламента. Его правление стало поворотным пунктом в становлении британской парламентской демократии и определило политический курс Англии в XVIII веке."
-        },
-        {
-            "id": 6,
-            "name": "Густав II Адольф",
-            "year_from": 1611,
-            "year_to": 1632,
-            "desc": "Король Швеции из династии Васа. Вступив на престол в условиях войны с Данией, России и Речью Посполитой, провел масштабные военные, административные и экономические реформы, превратив Швецию в сильное централизованное государство и ведущую военную державу Северной Европы. Прославился как великий полководец и «отец современной войны» за тактические инновации в ходе Тридцатилетней войны, где погиб в жестокой битве при Лютцене. Его вмешательство коренным образом изменило ход войны в пользу протестантской коалиции."
-        },
-        {
-            "id": 7,
-            "name": "Петр I",
-            "year_from": 1682,
-            "year_to": 1725,
-            "desc": "Первый Император Всероссийский. Вступив на престол в условиях отставания России от ведущих европейских держав, провел масштабные реформы практически во всех сферах жизни: государственное управление (учреждение Сената, коллегий), армию и флот (рекрутские наборы, создание регулярного войска и военно-морского флота), экономику (развитие мануфактур, протекционизм) и культуру («европеизация»). В результате Северной войны (1700–1721) прорубил «окно в Европу», закрепив за Россией выход к Балтийскому морю и статус великой империи."
-        },
-        {
-            "id": 8,
-            "name": "Сулейман I Великолепный",
-            "year_from": 1520,
-            "year_to": 1566,
-            "desc": "Десятый султан Османской империи, при котором государство достигло пика своего могущества. Провел масштабные завоевания, подчинив Белград, Родос, Венгрию, Багдад и Месопотамию, и установив контроль над Средиземным морем и значительной частью Северной Африки. Провел кодификацию османского права («Законодатель»), покровительствовал искусству и архитектуре (период «золотого века» Османской империи). Его правление стало эпохой расцвета военной мощи, культурного развития и административной эффективности империи."
-        },
-        {
-            "id": 9,
-            "name": "Фридрих II Великий",
-            "year_from": 1740,
-            "year_to": 1786,
-            "desc": "Король Пруссии из династии Гогенцоллернов. Вступив на престол в условиях нарастающей геополитической конкуренции в Европе, превратил Пруссию в ведущую военную державу через серию победоносных войн (в частности, за Австрийское наследство и Семилетнюю войну) и территориальные приобретения. Провел масштабные внутренние реформы в духе «просвещенного абсолютизма» (развитие образования, реорганизация армии, веротерпимость, модернизация законодательства), заложив основы для будущего объединения Германии под главенством Пруссии."
-        }
-    ]
+import re
+import math
+import string
+import pymorphy2
 
-mass = [1, 6, 9]
+morph = pymorphy2.MorphAnalyzer()
 
-cart = [
-    {"id": 1,
-     "historyPersons_ids" : mass,
-     "historyPersons_count": len(mass),
-     "result_year_from" : 1380,
-     "result_year_to" : 1450},
-]
+def normalize_text(text):
+    """Разбивает текст на слова и приводит каждое к нормальной форме"""
+    text = text.lower()
+    text = re.sub(f"[{re.escape(string.punctuation)}]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    words = text.split()
+    return [morph.parse(w)[0].normal_form for w in words]
+
+def generate_keyforms(person_name):
+    """Создаёт ключевые формы имени: полные, имя+номер, имя+прозвище, имя"""
+    words = person_name.split()
+    words_norm = [morph.parse(w.lower())[0].normal_form for w in words]
+
+    keyforms = {"full": set(), "strong": set(), "weak": set()}
+
+    # Полное имя (все слова сразу)
+    if len(words_norm) > 1:
+        keyforms["full"].add(" ".join(words_norm))
+
+    # Имя + что-то (номер или прозвище)
+    if len(words_norm) > 1:
+        first = words_norm[0]
+        last = words_norm[-1]
+        # Имя + последний элемент (номер или прозвище)
+        keyforms["strong"].add(f"{first} {last}")
+
+    # Только имя (слабое совпадение, но полезное)
+    keyforms["weak"].add(words_norm[0])
+
+    return keyforms
+
+def is_person_mentioned(person_name, text, percent_of_trust):
+    normalized_words = normalize_text(text)
+    text_proc = " ".join(normalized_words)
+
+    keyforms = generate_keyforms(person_name)
+
+    points = 0
+    text_remaining = text_proc.split()
+
+    for lvl, weight in [("full", 3), ("strong", 2), ("weak", 1)]:
+        for form in keyforms[lvl]:
+            form_words = form.split()
+            if len(form_words) == 1 and len(form_words[0]) <= 2:
+                continue
+            for i in range(len(text_remaining) - len(form_words) + 1):
+                if text_remaining[i:i+len(form_words)] == form_words:
+                    points += weight
+                    text_remaining[i:i+len(form_words)] = ["_"] * len(form_words)
+
+    required_points = 1 + math.ceil((1 - percent_of_trust) * 4)
+
+    return points >= required_points
+
+
 
 def GET_main_page(request):
     query = request.GET.get("q", "")
-    filtered_persons = persons
+    persons = HistoryPerson.objects.filter(is_active=True)
+
     if query:
-        filtered_persons = [p for p in persons if query.lower() in p["name"].lower()]
-    return render(request, "index.html", {"persons": filtered_persons,
-                                          "query": query, "cart": cart[0]})
+        persons = persons.filter(person_name__icontains=query)
+
+    order = None
+    order_items_count = 0
+    if request.user.is_authenticated:
+        order = HistoryCheckOrder.objects.filter(
+            creator=request.user, status=HistoryCheckOrder.Status.DRAFT
+        ).first()
+        if order:
+            order_items_count = order.items.count()
+
+    return render(request,
+                  'index.html',
+                  {
+                      "persons": persons,
+                      "query": query,
+                      "order_id": order.id if order else None,
+                      "order_items_count": order_items_count
+                  })
 
 def GET_HistoryPersonDetailed(request, person_id):
-    person = next((p for p in persons if p["id"] == person_id), None)
-    return render(request, "historyPersonDetalied.html", {"person": person})
+    person = get_object_or_404(HistoryPerson, id=person_id, is_active=True)
+    data = {
+        "id": person.id,
+        "person_name": person.person_name,
+        "year_from": person.year_from,
+        "year_to": person.year_to,
+        "description": person.description,
+    }
+    return render(request, "historyPersonDetailed.html", {"data": data})
 
 def GET_orderForPredictYearPage(request, order_id):
-    order_id = 1
-    selectCart = next((x for x in cart if x["id"] == order_id), None)
-    selectedPersons = [p for p in persons if p["id"] in selectCart["historyPersons_ids"]]
-    return render(request, "orderForPredictingYear.html", {
-        "cart": selectCart,
-        "persons": selectedPersons
-    })
+    order = get_object_or_404(HistoryCheckOrder, id=order_id, creator=request.user, status='DRAFT')
+    order_items = order.items.select_related("person").all()
+    return render(
+        request,
+        "orderForPredictingYear.html",
+        {
+            "order": order,
+            "order_items": order_items,
+            "year_from_result": order.year_from_result,
+            "year_to_result": order.year_to_result
+        },
+    )
+
+@login_required
+def addToPredictOrder(request, person_id):
+    if request.method != "POST":
+        return HttpResponse("Метод не разрешён", status=405)
+
+    person = get_object_or_404(HistoryPerson, id=person_id, is_active=True)
+
+    order, created = HistoryCheckOrder.objects.get_or_create(
+        creator=request.user, status=HistoryCheckOrder.Status.DRAFT
+    )
+
+    item, created = HistoryCheckOrderItem.objects.get_or_create(order=order, person=person)
+    if not created:
+        item.save()
+
+    return redirect("main_page")
+
+@login_required
+def deletePredictOrder(request, order_id):
+    if request.method != "POST":
+        return HttpResponse("Метод не разрешён", status=405)
+
+    order = get_object_or_404(HistoryCheckOrder, id=order_id, creator=request.user)
+
+    if order.status != HistoryCheckOrder.Status.DRAFT:
+        return HttpResponse("Можно удалить только черновик", status=400)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE historycheck_historycheckorder SET status = %s WHERE id = %s",
+            [HistoryCheckOrder.Status.DELETED, order.id],
+        )
+        transaction.commit()
+
+    return redirect("main_page")
+
+@login_required
+def savingTextForPredictOrder(request, order_id):
+    if request.method != "POST":
+        return HttpResponse("Метод не разрешён", status=405)
+
+    order = get_object_or_404(
+        HistoryCheckOrder,
+        id=order_id,
+        creator=request.user,
+        status=HistoryCheckOrder.Status.DRAFT
+    )
+
+    history_text = request.POST.get("history_text", "").strip()
+    order.history_text = history_text
+    order.save()
+
+    for item in order.items.all():
+        key = f"confidence_{item.person.id}"
+        try:
+            value = float(request.POST[key])
+            item.percent_of_trust = value
+            item.save()
+        except ValueError:
+            pass
+
+    return redirect("orderForPredictYear", order_id=order.id)
+
+@login_required
+def makePredictOrder(request, order_id):
+    if request.method != "POST":
+        return HttpResponse("Метод не разрешён", status=405)
+
+    order = get_object_or_404(
+        HistoryCheckOrder,
+        id=order_id,
+        creator=request.user,
+        status=HistoryCheckOrder.Status.DRAFT
+    )
+
+    for item in order.items.all():
+        key = f"confidence_{item.person.id}"
+        if key in request.POST:
+            try:
+                value = float(request.POST[key])
+                item.percent_of_trust = value
+                item.save()
+            except ValueError:
+                pass
+
+    confirmed_persons = []
+    text = order.history_text
+
+    for item in order.items.all():
+        if is_person_mentioned(item.person.person_name, text, item.percent_of_trust):
+            confirmed_persons.append(item.person)
+
+    if confirmed_persons:
+        year_from = max(p.year_from for p in confirmed_persons)
+        year_to = min(p.year_to for p in confirmed_persons)
+        if year_from <= year_to:
+            order.year_from_result = year_from
+            order.year_to_result = year_to
+        else:
+            order.year_from_result = None
+            order.year_to_result = None
+    else:
+        order.year_from_result = None
+        order.year_to_result = None
+
+    order.status = HistoryCheckOrder.Status.DRAFT
+    order.save()
+
+    return redirect("orderForPredictYear", order_id=order.id)

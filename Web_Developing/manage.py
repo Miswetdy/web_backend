@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+import inspect
+
+# Патч для старых библиотек (например pymorphy2), которые используют getargspec
+if not hasattr(inspect, "getargspec"):
+    from collections import namedtuple
+
+    ArgSpec = namedtuple('ArgSpec', 'args varargs keywords defaults')
+
+    def getargspec(func):
+        """Эмуляция устаревшего inspect.getargspec через inspect.getfullargspec"""
+        spec = inspect.getfullargspec(func)
+        return ArgSpec(spec.args, spec.varargs, spec.varkw, spec.defaults)
+
+    inspect.getargspec = getargspec
+
 import os
 import sys
 

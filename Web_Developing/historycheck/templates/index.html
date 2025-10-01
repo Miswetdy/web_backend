@@ -12,10 +12,16 @@
         </button>
     </div>
 </form>
-    <a href="/orderForPredictingYear/1/" class="cart-button">
+    {% if order_items_count > 0 %}
+      <a href="/orderForPredictingYear/{{ order_id }}/" class="cart-button">
         <img src="http://localhost:9000/images/cartOfPersons.png" alt="cart">
-        <span class="cart-counter">{{ cart.historyPersons_count }}</span>
+        <span class="cart-counter">{{ order_items_count }}</span>
     </a>
+    {% else %}
+      <div class="cart-button disabled">
+        <img src="http://localhost:9000/images/cartOfPersons.png" alt="cart">
+      </div>
+    {% endif %}
 </div>
 <div class="cards-container">
     {% for person in persons %}

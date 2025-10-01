@@ -15,12 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.contrib import admin
 from historycheck import views
 from django.urls import path, include
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', views.GET_main_page, name='main_page'),
     path("historyPersonDetailed/<int:person_id>/", views.GET_HistoryPersonDetailed, name="historyPersonDetailed"),
     path("orderForPredictingYear/<int:order_id>/", views.GET_orderForPredictYearPage, name="orderForPredictYear"),
+    path("orderForPredictingYear/add/<int:person_id>/", views.addToPredictOrder, name="addToPredictOrder"),
+    path("orderForPredictingYear/delete/<int:order_id>/", views.deletePredictOrder, name="deletePredictOrder"),
+    path("orderForPredictingYear/savingText/<int:order_id>/", views.savingTextForPredictOrder, name="savingTextForPredictOrder"),
+    path("orderForPredictingYear/make/<int:order_id>/", views.makePredictOrder, name="makePredictOrder"),
 ]
 

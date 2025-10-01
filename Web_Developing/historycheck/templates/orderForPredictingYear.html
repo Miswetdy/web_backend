@@ -6,46 +6,77 @@
 <div class="cart-container">
     <h1 class="page-title">Оформление заявки</h1>
 
-    <h2 class="section-title">Текст хроники события</h2>
-    <textarea placeholder="Ввести..."></textarea>
-    <button class="save-btn">Сохранить</button>
+    <!-- ОБЪЕДИНЕННАЯ ФОРМА: Сохранение текста + коэффициентов доверия -->
+    <form method="post" action="{% url 'savingTextForPredictOrder' order.id %}">
+        {% csrf_token %}
 
-    {% for person in persons %}
-    <div class="cart-card">
-        <div class="cart-card-image">
-            <img src="http://localhost:9000/images/historyPerson{{ person.id }}.png" alt="{{ person.name }}">
-        </div>
-        <div class="cart-card-content">
-            <h2>{{ person.name }}</h2>
-            <div class="info-row">
-                <p class="years">
-                    Годы правления <br><strong>{{ person.year_from }} — {{ person.year_to }}</strong>
-                </p>
-                <div class="confidence-input-container">
-                    <label class="confidence-label">
-                    Коэффициент доверия
-                        <input class="confidence-input" type="number" name="confidence_{{ person.id }}"
-                            min="0" max="1" step="0.01" value="1.0" required>
-                    </label>
+        <!-- Текст хроники -->
+        <h2 class="section-title">Текст хроники события</h2>
+        <textarea name="history_text" placeholder="Ввести..." required>{{ order.history_text }}</textarea>
+
+        <!-- Карточки с коэффициентами доверия -->
+        {% for item in order_items %}
+        <div class="cart-card">
+            <div class="cart-card-image">
+                <img src="http://localhost:9000/images/historyPerson{{ item.person.id }}.png" alt="{{ item.person.person_name }}">
+            </div>
+            <div class="cart-card-content">
+                <h2>{{ item.person.person_name }}</h2>
+                <div class="info-row">
+                    <p class="years">
+                        Годы правления <br><strong>{{ item.person.year_from }} — {{ item.person.year_to }}</strong>
+                    </p>
+                    <div class="confidence-input-container">
+                        <label class="confidence-label">
+                            Коэффициент доверия
+                            <input class="confidence-input" type="number"
+                                   name="confidence_{{ item.person.id }}"
+                                   min="0" max="1" step="0.01"
+                                   value="{{ item.percent_of_trust }}" required>
+                        </label>
+                    </div>
                 </div>
             </div>
-
-        </div>
-        <div class="card-footer">
-                <a href="/historyPersonDetailed/{{ person.id }}/" class="details-btn">Подробнее →</a>
+            <div class="card-footer">
+                <a href="/historyPersonDetailed/{{ item.person.id }}/" class="details-btn">Подробнее →</a>
             </div>
-        <button class="remove-btn">✕</button>
-    </div>
-    {% endfor %}
+        </div>
+        {% endfor %}
 
-    <div class="order-buttons" display="inline">
-        <button class="make-order-btn">Оформить заявку</button>
-        <button class="remove-order-btn">Удалить заявку</button>
+        <!-- Кнопка сохранения текста и коэффициентов -->
+        <div class="order-buttons" style="margin-top:10px;">
+            <button type="submit" class="save-btn">Сохранить</button>
+        </div>
+    </form>
+
+    <!-- Отдельная форма для оформления заявки -->
+    <form method="post" action="{% url 'makePredictOrder' order.id %}">
+        {% csrf_token %}
+        <!-- Повторяем input для коэффициентов, чтобы при оформлении заявки были актуальные значения -->
+        {% for item in order_items %}
+            <input type="hidden" name="confidence_{{ item.person.id }}" value="{{ item.percent_of_trust }}">
+        {% endfor %}
+        <div class="order-buttons" style="margin-top:10px;">
+            <button type="submit" class="make-order-btn">Оформить заявку</button>
+        </div>
+    </form>
+
+    <!-- Форма удаления заявки -->
+    <div class="order-buttons" style="margin-top:10px;">
+        <form method="post" action="{% url 'deletePredictOrder' order.id %}">
+            {% csrf_token %}
+            <button type="submit" class="remove-order-btn">Удалить заявку</button>
+        </form>
     </div>
 
-    <div class="event-year">
+    <!-- Отображение результата вычисления года -->
+    <div class="event-year" style="margin-top:20px;">
         <h2>Год события</h2>
-        <p class="year-box">{{ cart.result_year_from }} — {{ cart.result_year_to }}</p>
+        {% if year_from_result %}
+        <p class="year-box">{{ year_from_result }} — {{ year_to_result }}</p>
+        {% else %}
+        <p class="year-box">Пока не вычислено</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
