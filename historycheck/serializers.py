@@ -12,18 +12,15 @@ class HistoryPersonSerializer(serializers.ModelSerializer):
 
 class HistoryCheckOrderItemSerializer(serializers.ModelSerializer):
     person_detail = HistoryPersonSerializer(source='person', read_only=True)
-    person = serializers.PrimaryKeyRelatedField(queryset=HistoryPerson.objects.filter(is_active=True))
 
     class Meta:
         model = HistoryCheckOrderItem
         fields = [
             'id',
-            'order',
-            'person',
             'person_detail',
             'percent_of_trust',
         ]
-        read_only_fields = ['id', 'order', 'person', 'person_detail']
+        read_only_fields = ['id', 'person_detail']
 
 
 class HistoryCheckOrderSerializer(serializers.ModelSerializer):

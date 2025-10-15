@@ -384,8 +384,6 @@ class HistoryCheckOrderItemUpdate(APIView):
         serializer.save()
         return Response(serializer.data)
 
-
-
 class HistoryCheckOrderItemDelete(APIView):
     permission_classes = [permissions.AllowAny]
 
